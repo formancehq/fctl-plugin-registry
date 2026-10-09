@@ -45,3 +45,11 @@ with the race detector and enforce at least 80% statement coverage. CI uploads
 its coverage report as an artifact without a Codecov token.
 
 See [catalogue maintenance](docs/catalogue.md) for the contract and release process.
+
+## SDK dependency maintenance
+
+The public plugin SDK is pinned to a coordinated commit. Dependabot tracks other
+Go dependencies and Actions, but excludes this submodule until it publishes its
+own `pkg/pluginsdk/v*` tags. Root fctl tags belong to the CLI and can point to
+versions without an SDK. Maintainers update the SDK pin together with host
+contract compatibility; revisit this exception when SDK tags are available.
