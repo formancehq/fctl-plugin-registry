@@ -2,6 +2,10 @@ version: 2
 updates:
   - package-ecosystem: gomod
     directory: /
+    # Root fctl tags do not version this SDK submodule. Coordinate its pinned
+    # commit with the host contract until pkg/pluginsdk has its own release tags.
+    ignore:
+      - dependency-name: github.com/formancehq/fctl/pkg/pluginsdk
     schedule:
       interval: daily
   - package-ecosystem: github-actions
