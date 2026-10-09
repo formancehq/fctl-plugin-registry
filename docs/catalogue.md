@@ -9,7 +9,7 @@ Each release uses the same JSON field names as the fctl distribution contract:
 
 | Field | Meaning |
 | --- | --- |
-| `service` | Service identity, initially `ledger` |
+| `service` | Service identity, `auth` or `ledger` |
 | `serviceVersion` | Exact version returned by the service's `/_info`, without the `v` prefix |
 | `revision` | Positive plugin revision, independent of the service version |
 | `platform.os` | `darwin`, `linux` or `windows` |
@@ -40,11 +40,15 @@ this repository does not build or publish product executables.
 
 ## Host discovery
 
-The fctl v4 registry integration reads this URL automatically for a new Ledger
-target. It selects the exact deployed service version and current platform,
+The fctl v4 registry integration reads this URL automatically for new Auth and Ledger
+targets. It selects the exact deployed service version and current platform,
 then installs the executable and saves a target lock with its manifest.
 
-Until a matching release is advertised, new targets keep the embedded Ledger
+Auth is external-only: a missing matching release or an unreachable catalogue
+is an error. Prepare its exact service version with `fctl plugins sync --service auth`
+or install a product-built executable locally.
+
+Until a matching Ledger release is advertised, new targets keep the embedded Ledger
 provider. New targets also keep it when the official catalogue is temporarily
 unreachable; malformed catalogue metadata is an error. An already installed external plugin retains its revision. A service
 version change requires a matching catalogue release; it must not silently

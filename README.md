@@ -10,10 +10,12 @@ Catalogue URL:
 https://raw.githubusercontent.com/formancehq/fctl-plugin-registry/main/registry.yaml
 ```
 
-The catalogue starts empty. No executable is advertised until its public artifact
-has been published and verified. The v4 registry integration keeps embedded
-providers for service versions without an advertised native release. External
-discovery currently applies to Ledger.
+Auth 2.5.2 revision 1 is available for Linux, macOS and Windows on amd64 and
+arm64. Its six GHCR artifacts were downloaded anonymously and verified against
+the product release catalogue before advertisement.
+
+Auth uses external discovery in fctl v4. Ledger retains its embedded provider
+until a matching native release is advertised.
 
 See [catalogue maintenance](docs/catalogue.md) for the schema and publication
 workflow.
