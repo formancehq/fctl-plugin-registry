@@ -1,0 +1,5 @@
+# Official fctl plugin catalogue.
+# Add releases only after their native artifacts are publicly available.
+# Each entry targets one exact service version, plugin revision and OS/architecture.
+schemaVersion: 1
+releases: []
