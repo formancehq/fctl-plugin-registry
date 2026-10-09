@@ -16,8 +16,10 @@ This is the entire contract. `plugins` maps a lowercase service identifier to a
 `releases` sequence. Each reference contains exactly `serviceVersion`, `catalogue`
 and `sha256`; embedded platform records and command manifests are forbidden.
 `serviceVersion` is an exact semantic version without `v`, not a range or tag.
-A service/version pair is unique. An empty plugins map or release sequence is
-valid; null or missing required collections are not.
+A service/version pair is unique. An empty plugins map is valid. Each advertised
+service requires at least one release reference; null or missing required
+collections are not. Service identifiers are limited to 64 characters and exact
+service versions to 128 characters.
 
 `catalogue` is an absolute public HTTPS URL, without credentials or a fragment.
 `sha256` is the checksum of the **raw downloaded file bytes**. Reformatting JSON,
@@ -46,7 +48,10 @@ Every entry must match the central service/version reference. A tuple of
 service/version/revision/OS/architecture is unique. Product catalogues cannot
 refer to another catalogue or central index. The manifest's name, service,
 version, root and supported protocol must match its release. Unknown and duplicate
-fields are rejected in both documents. YAML anchors, aliases, duplicate mapping
+fields are rejected in both documents. Command headers, reserved host names and
+flags, shorthands, persistent flag inheritance, body flags and confirmation
+requirements follow the fctl host command contract. Command and flag identifiers
+have no additional length limit. YAML anchors, aliases, duplicate mapping
 keys and multiple documents are rejected in the central index.
 
 The validator anonymously retrieves OCI manifests, verifies their raw digests,

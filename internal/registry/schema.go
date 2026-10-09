@@ -9,7 +9,6 @@ import (
 	"net"
 	"net/url"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/formancehq/fctl/pkg/pluginsdk"
@@ -21,6 +20,7 @@ const MaxCatalogueBytes int64 = 8 << 20
 
 var hashPattern = regexp.MustCompile(`^[0-9a-f]{64}$`)
 var versionPattern = regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+(?:[-+].*)?$`)
+var servicePattern = regexp.MustCompile(`^[a-z][a-z0-9-]{0,63}$`)
 var namePattern = regexp.MustCompile(`^[a-z][a-z0-9-]*$`)
 var repositoryPattern = regexp.MustCompile(`^[a-z0-9]+(?:[._-][a-z0-9]+)*(?:/[a-z0-9]+(?:[._-][a-z0-9]+)*)+$`)
 
@@ -140,12 +140,12 @@ func ParseIndex(data []byte) (Index, error) {
 		return index, fmt.Errorf("expected schemaVersion 2 and plugins map")
 	}
 	for service, product := range index.Plugins {
-		if !namePattern.MatchString(service) || product.Releases == nil {
+		if !servicePattern.MatchString(service) || len(product.Releases) == 0 {
 			return index, fmt.Errorf("invalid product %q", service)
 		}
 		seen := map[string]bool{}
 		for _, ref := range product.Releases {
-			if !versionPattern.MatchString(ref.ServiceVersion) || strings.HasPrefix(ref.ServiceVersion, "v") || !semver.IsValid("v"+ref.ServiceVersion) || seen[ref.ServiceVersion] {
+			if len(ref.ServiceVersion) > 128 || !versionPattern.MatchString(ref.ServiceVersion) || strings.HasPrefix(ref.ServiceVersion, "v") || !semver.IsValid("v"+ref.ServiceVersion) || seen[ref.ServiceVersion] {
 				return index, fmt.Errorf("invalid or duplicate %s version %q", service, ref.ServiceVersion)
 			}
 			seen[ref.ServiceVersion] = true
@@ -201,43 +201,8 @@ func validateRelease(r Release, service, version string) error {
 	if m.Name != service || m.Service != service || m.Version != version || m.ProtocolVersion != pluginsdk.ProtocolVersion || pluginsdk.CommandName(m.Root) != service {
 		return fmt.Errorf("SDK manifest identity or protocol mismatch")
 	}
-	return validateCommand(m.Root)
-}
-func validateCommand(c pluginsdk.CommandSpec) error {
-	if !namePattern.MatchString(pluginsdk.CommandName(c)) || c.Args.Min < 0 || c.Args.Max < c.Args.Min {
-		return fmt.Errorf("invalid command")
+	if coreRoots[m.Name] {
+		return fmt.Errorf("reserved plugin root %q", m.Name)
 	}
-	names := map[string]bool{}
-	for _, child := range c.Subcommands {
-		name := pluginsdk.CommandName(child)
-		if names[name] {
-			return fmt.Errorf("duplicate command %s", name)
-		}
-		names[name] = true
-		if err := validateCommand(child); err != nil {
-			return err
-		}
-	}
-	flags := map[string]bool{}
-	for _, f := range c.Flags {
-		if flags[f.Name] || !namePattern.MatchString(f.Name) || (f.Type != "string" && f.Type != "bool" && f.Type != "uint32") {
-			return fmt.Errorf("invalid flag %s", f.Name)
-		}
-		if f.Type == "bool" && f.Default != "true" && f.Default != "false" {
-			return fmt.Errorf("invalid boolean default")
-		}
-		if f.Type == "uint32" {
-			if _, err := strconv.ParseUint(f.Default, 10, 32); err != nil {
-				return fmt.Errorf("invalid uint32 default")
-			}
-		}
-		if f.Body && f.Type != "string" || f.RequireTrue && f.Type != "bool" {
-			return fmt.Errorf("invalid special flag type")
-		}
-		if f.Name == "confirm" && (f.Type != "bool" || f.Default != "false") {
-			return fmt.Errorf("invalid confirmation flag")
-		}
-		flags[f.Name] = true
-	}
-	return nil
+	return validateCommand(m.Root, validationScope{names: map[string]bool{}, shorts: map[string]bool{"h": true, "o": true, "p": true}})
 }
