@@ -24,7 +24,7 @@ before promotion; schema v1 product catalogues remain unchanged.
 
 ## Validate a change
 
-The committed Nix lock pins Go 1.26, Just and golangci-lint. Local and CI checks
+The committed Nix lock pins Go 1.27.3, Just and golangci-lint. Local and CI checks
 use identical recipes:
 
 ```sh
